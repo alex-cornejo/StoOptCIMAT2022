@@ -47,13 +47,17 @@ vector<vector<tuple<int, int, int>>> FileUtil::load_graph(const std::string &fil
     return adj;
 }
 
-int **FileUtil::load_edges(const std::string &file_path, int m) {
-    int **edges;
-    int n = 272;
-    vector<vector<tuple<int, int, int>>> adj(n);
+pair<int **, int> FileUtil::load_edges(const std::string &file_path, int m) {
+    int **edges = new int *[m];
+    for (int i = 0; i < m; ++i) {
+        edges[i] = new int[4];
+    }
+
     string line;
     ifstream file(file_path);
-    vector<std::pair<int, int>> edges_vec;
+
+    int n = 0;
+    int i = 0;
     if (file.is_open()) {
         while (getline(file, line)) {
             std::string::iterator new_end = std::unique(line.begin(), line.end(), BothAreSpaces);
@@ -65,24 +69,38 @@ int **FileUtil::load_edges(const std::string &file_path, int m) {
             vector<std::string> line_vec;
             boost::split(line_vec, line, boost::is_any_of(" "));
 
-            int i = stoi(line_vec[0]);
-            int j = stoi(line_vec[1]);
-            int dij = stoi(line_vec[4]);
-            int pij = stoi(line_vec[5]);
-            adj[i].push_back(make_tuple(j, dij, pij));
-            adj[j].push_back(make_tuple(i, dij, pij));
+            int v = stoi(line_vec[0]);
+            int u = stoi(line_vec[1]);
+            int dvu = stoi(line_vec[4]);
+            int pvu = stoi(line_vec[5]);
+            edges[i][0] = v;
+            edges[i][1] = u;
+            edges[i][2] = dvu;
+            edges[i][3] = pvu;
+            n = max(v, n);
+            n = max(u, n);
+            i++;
         }
         file.close();
     } else {
         cerr << "Unable to open file" << std::endl;
     }
-    return edges;
+    return make_pair(edges, n+1);
+}
+
+int FileUtil::check_number_lines(const string &file) {
+    int number_of_lines = 0;
+    std::string line;
+    std::ifstream myfile(file);
+
+    while (std::getline(myfile, line))
+        ++number_of_lines;
+    return number_of_lines;
 }
 
 bool FileUtil::save(std::string &output_path, std::string &content) {
-    std::ofstream output_file(output_path);
-//    output_file.write(&content, content.size());
-    output_file << content;
+    std::ofstream output_file(output_path, std::ios_base::app);
+    output_file << content << endl;
     output_file.close();
     return true;
 }

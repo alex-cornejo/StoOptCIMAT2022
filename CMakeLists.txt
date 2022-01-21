@@ -3,4 +3,4 @@ project(StoOpt)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(StoOpt main.cpp utils/FileUtil.h utils/FileUtil.cpp)
+add_executable(StoOpt src/main.cpp src/utils/FileUtil.h src/utils/FileUtil.cpp src/Solver.cpp src/Solver.h)
