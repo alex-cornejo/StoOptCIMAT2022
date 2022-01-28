@@ -16,6 +16,7 @@ private:
     int pop_size;
 
     long evaluate(std::vector<int> &ind);
+
     std::vector<std::vector<int>> generate_pop();
 
 public:

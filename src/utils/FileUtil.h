@@ -16,7 +16,7 @@ public:
 
     static bool save(std::string &output_path, std::string &content);
 
-    static std::pair<int **, int>load_edges(const std::string &file_path, int m);
+    static std::pair<int **, int> load_edges(const std::string &file_path, int m);
 
     static int check_number_lines(const std::string &file);
 };

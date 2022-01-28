@@ -85,7 +85,7 @@ pair<int **, int> FileUtil::load_edges(const std::string &file_path, int m) {
     } else {
         cerr << "Unable to open file" << std::endl;
     }
-    return make_pair(edges, n+1);
+    return make_pair(edges, n + 1);
 }
 
 int FileUtil::check_number_lines(const string &file) {

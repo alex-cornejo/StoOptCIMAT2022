@@ -15,6 +15,7 @@ _deps
 build/
 cmake-build-debug/
 bin/
+LSB/
 
 #other files
 *.cbp
