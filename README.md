@@ -5,6 +5,11 @@
 sudo apt install cmake
 ```
 
+## Remove cache file (if exists)
+```
+rm CMakeCache.txt
+```
+
 ## Compile program
 ```
 cmake -DCMAKE_BUILD_TYPE=Release .
@@ -28,5 +33,5 @@ The binary file will be generated onto the root folder with the name ```StoOpt``
 
 ## Example 1
 ```
-./StoOpt FAP08/GSM2-272.ctr 49 47 out1.txt
+./StoOpt FAP08/GSM2-272.ctr 49 47 LSB/F49/out1.txt
 ```

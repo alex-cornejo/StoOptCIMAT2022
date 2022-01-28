@@ -18,4 +18,4 @@ bin/
 
 #other files
 *.cbp
-out*.txt
+out*.txt*
