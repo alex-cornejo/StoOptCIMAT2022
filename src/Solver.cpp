@@ -8,6 +8,9 @@
 
 using namespace std;
 
+/*
+ * Generates candidate solutions
+ */
 std::vector<std::vector<int>> Solver::generate_pop() {
     vector<vector<int>> pop(pop_size);
     for (int i = 0; i < pop_size; ++i) {
@@ -22,7 +25,10 @@ std::vector<std::vector<int>> Solver::generate_pop() {
 
 long Solver::run() {
 
+    // 100k random candidate solutions are generated
     vector<std::vector<int>> pop = generate_pop();
+
+    // solutions are evaluated and best one is obtained
     long best_fitness = INT64_MAX;
     for (auto &ind: pop) {
         best_fitness = min(best_fitness, evaluate(ind));
@@ -30,6 +36,9 @@ long Solver::run() {
     return best_fitness;
 }
 
+/*
+ * Evaluates a vector of integers that represents a candidate solution
+ */
 long Solver::evaluate(vector<int> &ind) {
     long fitness = 0;
 

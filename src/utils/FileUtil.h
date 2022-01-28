@@ -12,8 +12,6 @@ class FileUtil {
 
 public:
 
-    static std::vector<std::vector<std::tuple<int, int, int>>> load_graph(const std::string &file_path);
-
     static bool save(std::string &output_path, std::string &content);
 
     static std::pair<int **, int> load_edges(const std::string &file_path, int m);
