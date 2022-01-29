@@ -1,5 +1,11 @@
 # CIMAT 2022: Stochasting Optimization
 
+## Install c++ boost libraries
+```
+sudo apt install libboost-all-dev
+```
+
+
 ## Install cmake
 ```
 sudo apt install cmake
