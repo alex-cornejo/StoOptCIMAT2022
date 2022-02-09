@@ -13,9 +13,6 @@ struct FAP_edge {
     int dij;
     int pij;
 
-//    FAP_edge(const int j)
-//            : j(j) {}
-
     bool operator==(const FAP_edge &u) const {
         return j == u.j;
     }
@@ -48,7 +45,7 @@ private:
     int n;
     int F;
     int pop_size;
-    std::vector<std::vector<std::tuple<int, int, int>>> adj;
+    std::vector<std::vector<FAP_edge>> adj;
 
     long evaluate(std::vector<int> &ind);
 
@@ -61,7 +58,7 @@ public:
 
     long run_circularlocalsearch(std::vector<int>& individual);
 
-    FAPSolver(std::vector<FAP_edge>& edges, std::vector<std::vector<std::tuple<int, int, int>>> &adj, int m, int n, int f, int popSize);
+    FAPSolver(std::vector<FAP_edge>& edges, std::vector<std::vector<FAP_edge>> &adj, int m, int n, int f, int popSize);
 
     virtual ~FAPSolver();
 
@@ -72,6 +69,8 @@ public:
     long run_random_search();
 
     std::vector<int> create_randomindividual();
+
+    long circular_localsearch(std::vector<int> &individual);
 };
 
 

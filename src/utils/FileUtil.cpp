@@ -9,6 +9,7 @@
 #include <numeric>
 #include <boost/algorithm/string.hpp>
 #include <fstream>
+#include <stdio.h>
 #include "FileUtil.h"
 #include "../FAPSolver.h"
 
@@ -16,9 +17,9 @@ using namespace std;
 
 bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
 
-vector<vector<tuple<int, int, int>>> FileUtil::load_adj(const std::string &file_path, int n) {
+vector<vector<FAP_edge>> FileUtil::load_adj(const std::string &file_path, int n) {
 
-    vector<vector<tuple<int, int, int>>> adj(n);
+    vector<vector<FAP_edge>> adj(n);
     string line;
     ifstream file(file_path);
     vector<std::pair<int, int>> edges_vec;
@@ -37,8 +38,19 @@ vector<vector<tuple<int, int, int>>> FileUtil::load_adj(const std::string &file_
             int j = stoi(line_vec[1]);
             int dij = stoi(line_vec[4]);
             int pij = stoi(line_vec[5]);
-            adj[i].push_back(make_tuple(j, dij, pij));
-            adj[j].push_back(make_tuple(i, dij, pij));
+            FAP_edge e1{};
+            e1.i = i;
+            e1.j = j;
+            e1.dij = dij;
+            e1.pij = pij;
+            adj[i].push_back(e1);
+
+            FAP_edge e2{};
+            e2.i = j;
+            e2.j = i;
+            e2.dij = dij;
+            e2.pij = pij;
+            adj[j].push_back(e2);
         }
         file.close();
     } else {
@@ -100,9 +112,23 @@ int FileUtil::check_number_lines(const string &file) {
     return number_of_lines;
 }
 
-bool FileUtil::save(std::string &output_path, std::string &content) {
+bool FileUtil::save_override(std::string &output_path, std::string &content) {
     std::ofstream output_file(output_path);
     output_file << content << endl;
     output_file.close();
+    return true;
+}
+
+bool FileUtil::save_append(std::string &output_path, std::string &content) {
+    std::ofstream output_file(output_path, std::ios_base::app);
+    output_file << content << endl;
+    output_file.close();
+    return true;
+}
+
+bool FileUtil::delete_file(std::string &file_path) {
+    if (remove(file_path.c_str()) != 0) {
+        return false;
+    }
     return true;
 }

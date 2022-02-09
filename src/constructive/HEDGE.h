@@ -16,18 +16,19 @@ private:
     int n;
     int F;
     int max_degree_v;
-    std::vector<bool> marked;
-    std::vector<std::vector<std::tuple<int, int, int>>> &adj;
-
+    std::vector<bool> assigned;
+    std::vector<std::vector<FAP_edge>> &adj;
     std::vector<std::unordered_set<FAP_edge, FAP_edge_hash>> Gs;
 
-    int update_Gs(int v);
+    int update_Gs(int u);
 
 public:
 
-    HEDGE(int n, int f, std::vector<std::vector<std::tuple<int, int, int>>> &adj);
+    HEDGE(int n, int f, std::vector<std::vector<FAP_edge>> &adj);
 
     std::vector<int> run();
+
+    int create_Gs();
 };
 
 

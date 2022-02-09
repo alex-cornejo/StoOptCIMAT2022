@@ -10,7 +10,8 @@
 
 using namespace std;
 
-FAPSolver::FAPSolver(vector<FAP_edge> &edges, vector<vector<tuple<int, int, int>>> &adj, int m, int n, int f, int popSize) :
+FAPSolver::FAPSolver(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int m, int n, int f,
+                     int popSize) :
         edges(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize) {}
 
 FAPSolver::~FAPSolver() {}
@@ -52,7 +53,7 @@ long FAPSolver::swap_localsearch(vector<int> &individual) {
         long fitness_diff = incremental_evaluator(individual, neighbor);
 
         if (fitness_diff < 0) {
-            // neighbor improved fitness
+            // neighbor improves fitness
             // reset bar
             skip_bar = neighborhood.size();
 
@@ -64,7 +65,48 @@ long FAPSolver::swap_localsearch(vector<int> &individual) {
             // do swap and move bar
             swap(neighborhood[rnd_idx], neighborhood[--skip_bar]);
         }
-        cout << fitness << endl;
+//        cout << fitness << endl;
+    }
+
+    return fitness;
+}
+
+/**
+ * Performs a local search by using the circular approach
+ * i.e. it iterates circularly the vector of neighbors
+ * until all of them are explored.
+ * Iterates to the right.
+ *
+ * @param individual to use for local search
+ * @return best fitness in local search
+ */
+long FAPSolver::circular_localsearch(vector<int> &individual) {
+    long fitness = evaluate(individual);
+    vector<pair<int, int>> neighborhood = generate_full_neighborhood();
+
+    int neighborhood_size = (int)neighborhood.size();
+
+    // choose a random neighbor to start
+    int idx = rand() % neighborhood_size;
+    int skip_bar = idx > 0 ? idx - 1 : neighborhood_size - 1 ;
+
+    while (idx != skip_bar) {
+        auto neighbor = neighborhood[idx];
+        long fitness_diff = incremental_evaluator(individual, neighbor);
+
+        if (fitness_diff < 0) {
+            // neighbor improves fitness
+            // reset bar
+            skip_bar = idx;
+
+            // move to that neighbor
+            individual[neighbor.first] = neighbor.second;
+            fitness += fitness_diff;
+        }
+        if (++idx == neighborhood_size) {
+            idx = 0;
+        }
+//        cout << fitness << endl;
     }
 
     return fitness;
@@ -72,8 +114,8 @@ long FAPSolver::swap_localsearch(vector<int> &individual) {
 
 /**
  * Given an individual and a possible move (neighbor (v, c) v is the node and c the channel),
- * the quality of the move (v, e) is incrementally evaluated by exploring only the possible
- * affected edges if move (v, e) is performed.
+ * the quality of the move (v, c) is incrementally evaluated by exploring only the possible
+ * affected edges if move (v, c) is performed.
  *
  * @param individual
  * @param neighbor move (v, c) to be evaluated
@@ -85,16 +127,15 @@ long FAPSolver::incremental_evaluator(vector<int> &individual, pair<int, int> &n
     int v = neighbor.first;
     int c = neighbor.second;
     long fitness_diff = 0;
-    for (auto &u: adj[neighbor.first]) {
-        int iu, dvu, puv;
-        tie(iu, dvu, puv) = u;
+    for (FAP_edge &e: adj[v]) {
+
         // measure penalization of original channel of v
-        if (abs(individual[v] - individual[iu]) <= dvu) {
-            fitness_diff -= puv;
+        if (abs(individual[v] - individual[e.j]) <= e.dij) {
+            fitness_diff -= e.pij;
         }
         // measure penalization of move (v, c)
-        if (abs(c - individual[iu]) <= dvu) {
-            fitness_diff += puv;
+        if (abs(c - individual[e.j]) <= e.dij) {
+            fitness_diff += e.pij;
         }
     }
     return fitness_diff;
@@ -131,7 +172,7 @@ vector<int> FAPSolver::create_randomindividual() {
  */
 long FAPSolver::evaluate(vector<int> &ind) {
     long fitness = 0;
-    for (FAP_edge e: edges) {
+    for (FAP_edge &e: edges) {
         if (abs(ind[e.i] - ind[e.j]) <= e.dij) {
             fitness += e.pij;
         }
@@ -164,6 +205,6 @@ long FAPSolver::run_swaplocalsearch(vector<int> &individual) {
 // run homework 2
 long FAPSolver::run_circularlocalsearch(vector<int> &individual) {
     // local search
-    long best_fitness = swap_localsearch(individual);
+    long best_fitness = circular_localsearch(individual);
     return best_fitness;
 }
