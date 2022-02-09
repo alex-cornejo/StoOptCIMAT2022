@@ -1,0 +1,1 @@
+/home/est_posgrado_alexcornejo/StoOpt/StoOpt /home/est_posgrado_alexcornejo/StoOpt/FAP08/GSM2-272.ctr 49 1 /home/est_posgrado_alexcornejo/StoOpt/homework2/GSM2-272/F49_HEDGE_swap/output1.txt HEDGE swap true
