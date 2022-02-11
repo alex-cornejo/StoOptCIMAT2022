@@ -10,6 +10,10 @@
 
 using namespace std;
 
+#include <chrono>
+
+using namespace std::chrono;
+
 FAPSolver::FAPSolver(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int m, int n, int f,
                      int popSize) :
         edges(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize) {}
@@ -41,31 +45,32 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
  * @return best fitness in local search
  */
 long FAPSolver::swap_localsearch(vector<int> &individual) {
+
     long fitness = evaluate(individual);
+
     vector<pair<int, int>> neighborhood = generate_full_neighborhood();
-    size_t skip_bar = neighborhood.size();
-    while (skip_bar > 0) {
+    size_t i = neighborhood.size();
+    while (i > 0) {
 
-        // choose a random neighbor
-        int rnd_idx = rand() % skip_bar;
-        auto neighbor = neighborhood[rnd_idx];
+        // choose a random Nj
+        int j = rand() % i;
+        auto Nj = neighborhood[j];
 
-        long fitness_diff = incremental_evaluator(individual, neighbor);
+        long fitness_diff = incremental_evaluator(individual, Nj);
 
         if (fitness_diff < 0) {
-            // neighbor improves fitness
+            // Nj improves fitness
             // reset bar
-            skip_bar = neighborhood.size();
+            i = neighborhood.size();
 
-            // move to that neighbor
-            individual[neighbor.first] = neighbor.second;
+            // move to Nj
+            individual[Nj.first] = Nj.second;
             fitness += fitness_diff;
         } else {
-            //neighbor worse fitness
+            //Nj worse fitness
             // do swap and move bar
-            swap(neighborhood[rnd_idx], neighborhood[--skip_bar]);
+            swap(neighborhood[j], neighborhood[--i]);
         }
-//        cout << fitness << endl;
     }
 
     return fitness;
@@ -81,32 +86,33 @@ long FAPSolver::swap_localsearch(vector<int> &individual) {
  * @return best fitness in local search
  */
 long FAPSolver::circular_localsearch(vector<int> &individual) {
+
     long fitness = evaluate(individual);
+
     vector<pair<int, int>> neighborhood = generate_full_neighborhood();
 
-    int neighborhood_size = (int)neighborhood.size();
+    int neighborhood_size = (int) neighborhood.size();
 
     // choose a random neighbor to start
-    int idx = rand() % neighborhood_size;
-    int skip_bar = idx > 0 ? idx - 1 : neighborhood_size - 1 ;
+    int i = rand() % neighborhood_size;
+    int j = i > 0 ? i - 1 : neighborhood_size - 1;
 
-    while (idx != skip_bar) {
-        auto neighbor = neighborhood[idx];
-        long fitness_diff = incremental_evaluator(individual, neighbor);
+    while (i != j) {
+        auto Ni = neighborhood[i];
+        long fitness_diff = incremental_evaluator(individual, Ni);
 
         if (fitness_diff < 0) {
-            // neighbor improves fitness
+            // Ni improves fitness
             // reset bar
-            skip_bar = idx;
+            j = i;
 
-            // move to that neighbor
-            individual[neighbor.first] = neighbor.second;
+            // move to that Ni
+            individual[Ni.first] = Ni.second;
             fitness += fitness_diff;
         }
-        if (++idx == neighborhood_size) {
-            idx = 0;
+        if (++i == neighborhood_size) {
+            i = 0;
         }
-//        cout << fitness << endl;
     }
 
     return fitness;

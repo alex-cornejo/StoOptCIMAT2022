@@ -58,7 +58,7 @@ void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int 
         if (localsearch == "swap") {
             best_fitness = solver.run_swaplocalsearch(individual);
         } else {
-            best_fitness = solver.circular_localsearch(individual);
+            best_fitness = solver.run_circularlocalsearch(individual);
         }
 
         // finish time

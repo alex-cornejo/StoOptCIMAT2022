@@ -42,5 +42,5 @@ The binary file will be generated onto the root folder with the name ```StoOpt``
 
 ## Example 1
 ```
-./StoOpt FAP08/GSM2-272.ctr 49 47 LSB/F49/out1.txt
+./StoOpt FAP08/GSM2-272.ctr 49 7 output.txt random swap false
 ```
