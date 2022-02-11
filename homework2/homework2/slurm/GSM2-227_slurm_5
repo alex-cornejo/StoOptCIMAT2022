@@ -9,17 +9,17 @@
 
 # Nombre del trabajo. Puede cambiarlo
 # para identificarlo de forma más sencilla
-#SBATCH --job-name=alex
+#SBATCH --job-name=my_job
 
 #Numero máximo de tareas asignadas por nodo.
 #Valor recomendado: 12 para C1, 24 para C2, 24 para GPU.
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=2
 
 #Numero de procesos a ejecutar de forma simultanea (en total
 #teniendo en cuenta a todos los nodos). En este ejemplo
 #se usarían 2 nodos tipo C2, y en cada uno de los nodos se usarían
 #24 procesos, para el total de 48.
-#SBATCH --ntasks=1
+#SBATCH --ntasks=4
 
 # archivo de log donde quedará lo que imprima su software por pantalla.
 #Lo recomendable es que el programa no imprima nada a pantalla, sino a fichero directamente
@@ -37,7 +37,7 @@
 #SBATCH --time=0
 
 # En la línea siguiente cambie la ruta del fichero de tareas
-Tasks=/home/est_posgrado_alexcornejo/StoOpt/homework2/tasks_random_restart.txt
+Tasks=/home/est_posgrado_alexcornejo/StoOpt/homework2/GSM2-227/F39_random_swap/tasks.txt
 mpirun.openmpi -np ${SLURM_NTASKS} /opt/ClusterTools/MPI_Scheduler $Tasks  1
 
 # Para enviarlo en la bash escriba sbatch nombreDeEsteFichero
