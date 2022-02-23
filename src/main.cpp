@@ -85,6 +85,7 @@ void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int 
     } while (restart && run_time < max_time);
 }
 
+
 int main(int argc, char **argv) {
 
     // read parameters
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
     tie(edges, n) = FileUtil::load_edges(input_file, m);
     vector<vector<FAP_edge>> adj = FileUtil::load_adj(input_file, n);
     srand(seed);
-    int pop_size = 100000;
+    const int pop_size = 100000;
     execute(edges, adj, n, m, F, pop_size,
             construction, localsearch, restarting, output_file);
 

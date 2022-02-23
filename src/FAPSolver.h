@@ -39,6 +39,13 @@ public:
     }
 };
 
+struct hash_pair {
+    size_t operator()(const std::pair<int,
+            int> &x) const {
+        return x.first ^ x.second;
+    }
+};
+
 class FAPSolver {
 private:
     std::vector<FAP_edge> edges;
@@ -54,9 +61,15 @@ private:
     std::vector<std::vector<int>> generate_pop();
 
 public:
+    std::pair<int, int> sorted_pair(int i, int j) {
+        if (i < j)
+            return std::make_pair(i, j);
+        return std::make_pair(j, i);
+    }
+
     std::vector<std::pair<int, int>> generate_full_neighborhood();
 
-    std::vector<std::pair<int, int>> make_double_neighborhood();
+    std::unordered_set<std::pair<int, int>, hash_pair> make_double_neighborhood();
 
     long run_swaplocalsearch(std::vector<int> &individual);
 
@@ -76,9 +89,10 @@ public:
 
     long circular_localsearch(std::vector<int> &individual);
 
-    void evaluate_channels(std::vector<int> &ind, int i, int j, std::vector<std::pair<int, long>> &trxi_p_ch, std::vector<std::pair<int, long>> &trxj_p_ch);
+    void evaluate_channels(std::vector<int> &ind, int i, int j, std::vector<std::pair<int, long>> &trxi_p_ch,
+                           std::vector<std::pair<int, long>> &trxj_p_ch);
 
-    std::pair<int, int> compute_best_Nij(std::vector<int> &ind, int i, int j, int dij, long pij);
+    std::pair<std::pair<int, int>, long> compute_best_Nij(std::vector<int> &ind, int i, int j, int dij, long pij);
 
     long doubletrx_localsearch(std::vector<int> &ind);
 };

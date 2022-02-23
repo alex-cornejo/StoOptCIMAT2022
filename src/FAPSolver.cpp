@@ -20,7 +20,13 @@ using namespace std::chrono;
 
 FAPSolver::FAPSolver(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int m, int n, int f,
                      int popSize) :
-        edges(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize) {}
+        edges(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize) {
+    adj_set.resize(n);
+    for (int i = 0; i < n; ++i) {
+        adj_set[i].reserve(adj[i].size());
+        adj_set[i].insert(adj[i].begin(), adj[i].end());
+    }
+}
 
 FAPSolver::~FAPSolver() {}
 
@@ -44,115 +50,214 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
 }
 
 
-vector<pair<int, int>> FAPSolver::make_double_neighborhood() {
-    vector<pair<int, int>> neighborhood(n * 2);
-    int idx_neighbor = 0;
-    for (int idx_trx1 = 0; idx_trx1 < n; ++idx_trx1) {
-        for (int idx_trx2 = 0; idx_trx2 < n; ++idx_trx2) {
-            neighborhood[idx_neighbor++] = make_pair(idx_trx1, idx_trx2);
-        }
+unordered_set<pair<int, int>, hash_pair> FAPSolver::make_double_neighborhood() {
+
+    unordered_set<pair<int, int>, hash_pair> neighborhood(edges.size());
+    for (FAP_edge &e: edges) {
+        neighborhood.insert(make_pair(e.i, e.j));
     }
     return neighborhood;
 }
 
+
 long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 
-    vector<int> N_trxi(n);
-    iota(N_trxi.begin(), N_trxi.end(), 0); //become: [0..n-1]
-    //random_shuffle(N_trxi.begin(), N_trxi.end());
-    vector<bool> explored(n);
+    auto N = make_double_neighborhood();
 
-//    int last2_j = -1, last1_j = -1;
-//    queue<int> tabulist;
-    deque<int> tabulist;
-    int tabu_size = 4;
-    while (!N_trxi.empty()) {
-        int i = N_trxi.back();
-        explored[i] = true;
-        N_trxi.pop_back();
+    while (!N.empty()) {
+        cout << N.size() << endl;
+        int i, j;
+        tie(i, j) = *N.begin();
+        N.erase(N.begin());
 
         bool improvement = false;
-        int j;
-        for (FAP_edge &e: adj[i]) {
-            j = e.j;
-            if (!explored[j]) {
-                // get best assignment for i and j
-                auto Nij = compute_best_Nij(ind, i, j, e.dij, e.pij);
 
-                // there is a change (improvement)
-                if (Nij.first != ind[i] || Nij.second != ind[j]) {
-                    if (j == 92) {
-                        int a = 1;
-                    }
-//                    if (find(tabulist.begin(), tabulist.end(), j) == tabulist.end())
-                    if (true)
-//                    if (j != last2_j)
-                    {
-                        if (tabulist.size() == tabu_size) {
-                            tabulist.pop_back();
-                        }
-                        tabulist.push_front(j);
 
-//                        last2_j = last1_j == -1 ? -1 : last1_j;
-//                        last1_j = j;
+        FAP_edge e{};
+        e.j = j;
+        e = *adj_set[i].find(e);
+        // get best assignment for i and j
+        pair<int, int> Nij;
+        long Nij_p;
+        tie(Nij, Nij_p) = compute_best_Nij(ind, i, j, e.dij, e.pij);
 
-                        improvement = true;
-
-                        // move to neighbor Nij
-                        ind[i] = Nij.first;
-                        ind[j] = Nij.second;
-
-                        // re-add nodes to the neighborhood
-                        // with distance at most 2
-                        break;
-                    }
-
-                } else {
-//                    cout << "No improvement!" << endl;
+        long p_current = 0;
+        for (FAP_edge &e1: adj[i]) {
+            if (e1.j != j) {
+                if (abs(ind[i] - ind[e1.j]) <= e1.dij) {
+                    p_current += e1.pij;
                 }
             }
         }
-        // re-add nodes to the neighborhood
-        // with distance at most 2
-        if (improvement) {
-            explored[i] = false;
-            N_trxi.push_back(i);
+        for (FAP_edge &e1: adj[j]) {
+            if (e1.j != i) {
+                if (abs(ind[j] - ind[e1.j]) <= e1.dij) {
+                    p_current += e1.pij;
+                }
+            }
+        }
+        if (abs(ind[j] - ind[i]) <= e.dij) {
+            p_current += e.pij;
+        }
+
+
+        // there is a change (improvement)
+//        if (Nij.first != ind[i] || Nij.second != ind[j]) {
+        if (Nij_p < p_current) {
+
+//            if (p_current < Nij_p) {
+//                int a = 1;
+//            }
+
+            // move to neighbor Nij
+            ind[i] = Nij.first;
+            ind[j] = Nij.second;
+
+            // re-add nodes to the neighborhood
+            // with distance at most 2
             for (FAP_edge &e1: adj[i]) {
-                if (e1.j != j && explored[e1.j]) {
-                    explored[e1.j] = false;
-                    N_trxi.push_back(e1.j);
+                if (e1.j != j) {
+                    if (N.find(make_pair(i, e1.j)) == N.end() && N.find(make_pair(e1.j, i)) == N.end()) {
+                        N.insert(make_pair(i, e1.j));
+                    }
                     for (FAP_edge &e2: adj[e1.j]) {
-                        if (e2.j != i && explored[e2.j]) {
-                            explored[e2.j] = false;
-                            N_trxi.push_back(e2.j);
+                        if (e2.j != i) {
+                            if (N.find(make_pair(e2.j, e1.j)) == N.end() &&
+                                N.find(make_pair(e1.j, e2.j)) == N.end()) {
+                                N.insert(make_pair(e1.j, e2.j));
+                            }
                         }
                     }
                 }
             }
             for (FAP_edge &e1: adj[j]) {
-                if (e1.j != i && explored[e1.j]) {
-                    explored[e1.j] = false;
-                    N_trxi.push_back(e1.j);
+                if (e1.j != i) {
+                    if (N.find(make_pair(j, e1.j)) == N.end() && N.find(make_pair(e1.j, j)) == N.end()) {
+                        N.insert(make_pair(j, e1.j));
+                    }
                     for (FAP_edge &e2: adj[e1.j]) {
-                        if (e2.j != j && explored[e2.j]) {
-                            explored[e2.j] = false;
-                            N_trxi.push_back(e2.j);
+                        if (e2.j != j) {
+                            if (N.find(make_pair(e2.j, e1.j)) == N.end() &&
+                                N.find(make_pair(e1.j, e2.j)) == N.end()) {
+                                N.insert(make_pair(e1.j, e2.j));
+                            }
                         }
                     }
                 }
             }
-            int b = (int) N_trxi.size();
-            if (b < 272) {
-                int a = 1;
-            }
-            cout << N_trxi.size() << endl;
-        } else {
-            int a = 1;
+
         }
     }
     return evaluate(ind);
 
 }
+
+//long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
+//
+////    vector<int> N_trxi(n);
+////    iota(N_trxi.begin(), N_trxi.end(), 0); //become: [0..n-1]
+////    //random_shuffle(N_trxi.begin(), N_trxi.end());
+////    vector<bool> explored(n);
+////
+//////    int last2_j = -1, last1_j = -1;
+//////    queue<int> tabulist;
+////    deque<int> tabulist;
+////    int tabu_size = 4;
+//
+//
+//    auto N = make_double_neighborhood();
+//
+//    while (!N.empty()) {
+//        int i, j;
+//        tie(i, j) = *N.begin();
+//        N.erase(N.begin());
+//
+////        int i = N_trxi.back();
+////        explored[i] = true;
+////        N_trxi.pop_back();
+//
+//        bool improvement = false;
+////        int j;
+//        for (FAP_edge &e: adj[i]) {
+//            j = e.j;
+//            if (!explored[j]) {
+//                // get best assignment for i and j
+//                auto Nij = compute_best_Nij(ind, i, j, e.dij, e.pij);
+//
+//                // there is a change (improvement)
+//                if (Nij.first != ind[i] || Nij.second != ind[j]) {
+//                    if (j == 92) {
+//                        int a = 1;
+//                    }
+////                    if (find(tabulist.begin(), tabulist.end(), j) == tabulist.end())
+//                    if (true)
+////                    if (j != last2_j)
+//                    {
+//                        if (tabulist.size() == tabu_size) {
+//                            tabulist.pop_back();
+//                        }
+//                        tabulist.push_front(j);
+//
+////                        last2_j = last1_j == -1 ? -1 : last1_j;
+////                        last1_j = j;
+//
+//                        improvement = true;
+//
+//                        // move to neighbor Nij
+//                        ind[i] = Nij.first;
+//                        ind[j] = Nij.second;
+//
+//                        // re-add nodes to the neighborhood
+//                        // with distance at most 2
+//                        break;
+//                    }
+//
+//                } else {
+////                    cout << "No improvement!" << endl;
+//                }
+//            }
+//        }
+//        // re-add nodes to the neighborhood
+//        // with distance at most 2
+//        if (improvement) {
+//            explored[i] = false;
+//            N_trxi.push_back(i);
+//            for (FAP_edge &e1: adj[i]) {
+//                if (e1.j != j && explored[e1.j]) {
+//                    explored[e1.j] = false;
+//                    N_trxi.push_back(e1.j);
+//                    for (FAP_edge &e2: adj[e1.j]) {
+//                        if (e2.j != i && explored[e2.j]) {
+//                            explored[e2.j] = false;
+//                            N_trxi.push_back(e2.j);
+//                        }
+//                    }
+//                }
+//            }
+//            for (FAP_edge &e1: adj[j]) {
+//                if (e1.j != i && explored[e1.j]) {
+//                    explored[e1.j] = false;
+//                    N_trxi.push_back(e1.j);
+//                    for (FAP_edge &e2: adj[e1.j]) {
+//                        if (e2.j != j && explored[e2.j]) {
+//                            explored[e2.j] = false;
+//                            N_trxi.push_back(e2.j);
+//                        }
+//                    }
+//                }
+//            }
+//            int b = (int) N_trxi.size();
+//            if (b < 272) {
+//                int a = 1;
+//            }
+//            cout << N_trxi.size() << endl;
+//        } else {
+//            int a = 1;
+//        }
+//    }
+//    return evaluate(ind);
+//
+//}
 
 /**
  * Given two vertices i and j, the best assignment (Nij) for such vertices is computed.
@@ -164,7 +269,7 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
  * @param pij the penalization to be applied if channels of i and j are close enough.
  * @return
  */
-pair<int, int> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
+pair<pair<int, int>, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
 
     vector<pair<int, long>> trxi_p_ch(F);
     vector<pair<int, long>> trxj_p_ch(F);
@@ -210,7 +315,7 @@ pair<int, int> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int d
             if (!conflict) break;
         }
     }
-    return Nij_best;
+    return make_pair(Nij_best, p_Nij_best);
 }
 
 void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
