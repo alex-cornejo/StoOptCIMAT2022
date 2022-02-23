@@ -30,15 +30,15 @@ The binary file will be generated onto the root folder with the name ```StoOpt``
 
 ### Where,
 
-| Parameter        | Description                                                                                |
-|------------------|--------------------------------------------------------------------------------------------|
-| `[input_file]`   | (string) Instance file path with a valid format.                                           |
-| `[F]`            | (int) number of frecuency channels.                                                        |
- | `[seed]`         | (int) seed for random generation.                                                          |
-| `[output_file]`  | (string) File located in an existing folder to print the result.                           |
-| `[construction]` | (string) Method to create initial solution ('random' or 'HEDGE').                          |
-| `[localsearch]`  | (string) Local search method to be used ('swap' or 'circular').                            |
-| `[restart]`      | (bool) 'true' to create a new solution during one hour everytime a local optimal is reach. |
+| Parameter        | Description                                                                                  |
+|------------------|----------------------------------------------------------------------------------------------|
+| `[input_file]`   | (string) Instance file path with a valid format.                                             |
+| `[F]`            | (int) number of frecuency channels.                                                          |
+ | `[seed]`         | (int) seed for random generation.                                                            |
+| `[output_file]`  | (string) File located in an existing folder to print the result.                             |
+| `[construction]` | (string) Method to create initial solution ('random' or 'HEDGE').                            |
+| `[localsearch]`  | (string) Local search method to be used ('swap', 'circular' or 'doubletrx').                 |
+| `[restart]`      | (bool) 'true' to create a new solution during one hour everytime a local optimal is reached. |
 
 ## Example 1
 ```

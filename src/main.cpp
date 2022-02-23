@@ -9,6 +9,7 @@ using namespace std;
 
 
 #include <chrono>
+
 using namespace std::chrono;
 
 
@@ -57,8 +58,10 @@ void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int 
         long best_fitness;
         if (localsearch == "swap") {
             best_fitness = solver.run_swaplocalsearch(individual);
-        } else {
+        } else if (localsearch == "HEDGE") {
             best_fitness = solver.run_circularlocalsearch(individual);
+        } else {
+            best_fitness = solver.doubletrx_localsearch(individual);
         }
 
         // finish time
@@ -100,7 +103,7 @@ int main(int argc, char **argv) {
         cerr << "Wrong constructive method!" << endl;
     }
 
-    if (localsearch != "swap" && localsearch != "circular") {
+    if (localsearch != "swap" && localsearch != "circular" && localsearch != "doubletrx") {
         cerr << "Wrong local search method!" << endl;
     }
 

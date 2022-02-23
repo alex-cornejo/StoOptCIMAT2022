@@ -6,6 +6,7 @@
 #define STOOPT_FAPSOLVER_H
 
 #include <vector>
+#include <unordered_set>
 
 struct FAP_edge {
     int i;
@@ -46,6 +47,7 @@ private:
     int F;
     int pop_size;
     std::vector<std::vector<FAP_edge>> adj;
+    std::vector<std::unordered_set<FAP_edge, FAP_edge_hash>> adj_set;
 
     long evaluate(std::vector<int> &ind);
 
@@ -54,11 +56,13 @@ private:
 public:
     std::vector<std::pair<int, int>> generate_full_neighborhood();
 
-    long run_swaplocalsearch(std::vector<int>& individual);
+    std::vector<std::pair<int, int>> make_double_neighborhood();
 
-    long run_circularlocalsearch(std::vector<int>& individual);
+    long run_swaplocalsearch(std::vector<int> &individual);
 
-    FAPSolver(std::vector<FAP_edge>& edges, std::vector<std::vector<FAP_edge>> &adj, int m, int n, int f, int popSize);
+    long run_circularlocalsearch(std::vector<int> &individual);
+
+    FAPSolver(std::vector<FAP_edge> &edges, std::vector<std::vector<FAP_edge>> &adj, int m, int n, int f, int popSize);
 
     virtual ~FAPSolver();
 
@@ -71,6 +75,12 @@ public:
     std::vector<int> create_randomindividual();
 
     long circular_localsearch(std::vector<int> &individual);
+
+    void evaluate_channels(std::vector<int> &ind, int i, int j, std::vector<std::pair<int, long>> &trxi_p_ch, std::vector<std::pair<int, long>> &trxj_p_ch);
+
+    std::pair<int, int> compute_best_Nij(std::vector<int> &ind, int i, int j, int dij, long pij);
+
+    long doubletrx_localsearch(std::vector<int> &ind);
 };
 
 

@@ -11,6 +11,10 @@
 using namespace std;
 
 #include <chrono>
+#include <algorithm>
+#include <set>
+#include <numeric>
+#include <queue>
 
 using namespace std::chrono;
 
@@ -37,6 +41,200 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
         }
     }
     return neighborhood;
+}
+
+
+vector<pair<int, int>> FAPSolver::make_double_neighborhood() {
+    vector<pair<int, int>> neighborhood(n * 2);
+    int idx_neighbor = 0;
+    for (int idx_trx1 = 0; idx_trx1 < n; ++idx_trx1) {
+        for (int idx_trx2 = 0; idx_trx2 < n; ++idx_trx2) {
+            neighborhood[idx_neighbor++] = make_pair(idx_trx1, idx_trx2);
+        }
+    }
+    return neighborhood;
+}
+
+long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
+
+    vector<int> N_trxi(n);
+    iota(N_trxi.begin(), N_trxi.end(), 0); //become: [0..n-1]
+    //random_shuffle(N_trxi.begin(), N_trxi.end());
+    vector<bool> explored(n);
+
+//    int last2_j = -1, last1_j = -1;
+//    queue<int> tabulist;
+    deque<int> tabulist;
+    int tabu_size = 4;
+    while (!N_trxi.empty()) {
+        int i = N_trxi.back();
+        explored[i] = true;
+        N_trxi.pop_back();
+
+        bool improvement = false;
+        int j;
+        for (FAP_edge &e: adj[i]) {
+            j = e.j;
+            if (!explored[j]) {
+                // get best assignment for i and j
+                auto Nij = compute_best_Nij(ind, i, j, e.dij, e.pij);
+
+                // there is a change (improvement)
+                if (Nij.first != ind[i] || Nij.second != ind[j]) {
+                    if (j == 92) {
+                        int a = 1;
+                    }
+//                    if (find(tabulist.begin(), tabulist.end(), j) == tabulist.end())
+                    if (true)
+//                    if (j != last2_j)
+                    {
+                        if (tabulist.size() == tabu_size) {
+                            tabulist.pop_back();
+                        }
+                        tabulist.push_front(j);
+
+//                        last2_j = last1_j == -1 ? -1 : last1_j;
+//                        last1_j = j;
+
+                        improvement = true;
+
+                        // move to neighbor Nij
+                        ind[i] = Nij.first;
+                        ind[j] = Nij.second;
+
+                        // re-add nodes to the neighborhood
+                        // with distance at most 2
+                        break;
+                    }
+
+                } else {
+//                    cout << "No improvement!" << endl;
+                }
+            }
+        }
+        // re-add nodes to the neighborhood
+        // with distance at most 2
+        if (improvement) {
+            explored[i] = false;
+            N_trxi.push_back(i);
+            for (FAP_edge &e1: adj[i]) {
+                if (e1.j != j && explored[e1.j]) {
+                    explored[e1.j] = false;
+                    N_trxi.push_back(e1.j);
+                    for (FAP_edge &e2: adj[e1.j]) {
+                        if (e2.j != i && explored[e2.j]) {
+                            explored[e2.j] = false;
+                            N_trxi.push_back(e2.j);
+                        }
+                    }
+                }
+            }
+            for (FAP_edge &e1: adj[j]) {
+                if (e1.j != i && explored[e1.j]) {
+                    explored[e1.j] = false;
+                    N_trxi.push_back(e1.j);
+                    for (FAP_edge &e2: adj[e1.j]) {
+                        if (e2.j != j && explored[e2.j]) {
+                            explored[e2.j] = false;
+                            N_trxi.push_back(e2.j);
+                        }
+                    }
+                }
+            }
+            int b = (int) N_trxi.size();
+            if (b < 272) {
+                int a = 1;
+            }
+            cout << N_trxi.size() << endl;
+        } else {
+            int a = 1;
+        }
+    }
+    return evaluate(ind);
+
+}
+
+/**
+ * Given two vertices i and j, the best assignment (Nij) for such vertices is computed.
+ *
+ * @param ind
+ * @param i
+ * @param j
+ * @param dij
+ * @param pij the penalization to be applied if channels of i and j are close enough.
+ * @return
+ */
+pair<int, int> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
+
+    vector<pair<int, long>> trxi_p_ch(F);
+    vector<pair<int, long>> trxj_p_ch(F);
+
+    for (int c = 0; c < F; ++c) {
+        trxi_p_ch[c] = make_pair(c, 0);
+        trxj_p_ch[c] = make_pair(c, 0);
+    }
+
+    evaluate_channels(ind, i, j, trxi_p_ch, trxj_p_ch);
+
+
+    sort(trxi_p_ch.begin(), trxi_p_ch.end(), [](auto &left, auto &right) {
+        return left.second < right.second;
+    });
+    sort(trxj_p_ch.begin(), trxj_p_ch.end(), [](auto &left, auto &right) {
+        return left.second < right.second;
+    });
+
+    long cj_best = trxj_p_ch[0].second; // used for the lower bounds
+    pair<int, int> Nij_best;
+    long p_Nij_best = INT64_MAX;
+
+    for (pair<int, long> &trxi: trxi_p_ch) {
+        int ci = trxi.first;
+        long pi = trxi.second;
+
+        // check if lower bound is worse than best solution
+        if (pi + cj_best >= p_Nij_best) {
+            break;
+        }
+        for (pair<int, long> &trxj: trxj_p_ch) {
+            int cj = trxj.first;
+            long pj = trxj.second;
+
+            // search finishes if there is no conflict
+            bool conflict = abs(ci - cj) <= dij;
+            long p_Nij = pi + pj + (conflict ? pij : 0);
+            if (p_Nij < p_Nij_best) {
+                p_Nij_best = p_Nij;
+                Nij_best = make_pair(ci, cj);
+            }
+            if (!conflict) break;
+        }
+    }
+    return Nij_best;
+}
+
+void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
+                                  vector<pair<int, long>> &trxj_p_ch) {
+
+    for (FAP_edge &e: adj[i]) {
+        if (e.j != j) {
+            int ck = ind[e.j];
+            for (int c = ck - e.dij; c <= ck + e.dij; ++c) {
+                int mod = (c % F + F) % F;
+                trxi_p_ch[mod].second += e.pij;
+            }
+        }
+    }
+    for (FAP_edge &e: adj[j]) {
+        if (e.j != i) {
+            int ck = ind[e.j];
+
+            for (int c = ck - e.dij; c <= ck + e.dij; ++c) {
+                int mod = (c % F + F) % F;
+                trxj_p_ch[mod].second += e.pij;
+            }
+        }
+    }
 }
 
 /**
