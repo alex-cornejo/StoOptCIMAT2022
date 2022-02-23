@@ -52,11 +52,11 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
 
 unordered_set<pair<int, int>, hash_pair> FAPSolver::make_double_neighborhood() {
 
-    unordered_set<pair<int, int>, hash_pair> neighborhood(edges.size());
+    unordered_set<pair<int, int>, hash_pair> N(edges.size());
     for (FAP_edge &e: edges) {
-        neighborhood.insert(make_pair(e.i, e.j));
+        N.insert(sorted_pair(e.i, e.j));
     }
-    return neighborhood;
+    return N;
 }
 
 
@@ -65,12 +65,10 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
     auto N = make_double_neighborhood();
 
     while (!N.empty()) {
-        cout << N.size() << endl;
+//        cout << N.size() << endl;
         int i, j;
         tie(i, j) = *N.begin();
         N.erase(N.begin());
-
-        bool improvement = false;
 
 
         FAP_edge e{};
@@ -105,10 +103,6 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 //        if (Nij.first != ind[i] || Nij.second != ind[j]) {
         if (Nij_p < p_current) {
 
-//            if (p_current < Nij_p) {
-//                int a = 1;
-//            }
-
             // move to neighbor Nij
             ind[i] = Nij.first;
             ind[j] = Nij.second;
@@ -117,14 +111,15 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
             // with distance at most 2
             for (FAP_edge &e1: adj[i]) {
                 if (e1.j != j) {
-                    if (N.find(make_pair(i, e1.j)) == N.end() && N.find(make_pair(e1.j, i)) == N.end()) {
-                        N.insert(make_pair(i, e1.j));
+                    auto Nuv = sorted_pair(i, e1.j);
+                    if (N.find(Nuv) == N.end()) {
+                        N.insert(Nuv);
                     }
                     for (FAP_edge &e2: adj[e1.j]) {
                         if (e2.j != i) {
-                            if (N.find(make_pair(e2.j, e1.j)) == N.end() &&
-                                N.find(make_pair(e1.j, e2.j)) == N.end()) {
-                                N.insert(make_pair(e1.j, e2.j));
+                            auto Nvz = sorted_pair(e2.j, e1.j);
+                            if (N.find(Nvz) == N.end()) {
+                                N.insert(Nvz);
                             }
                         }
                     }
@@ -132,20 +127,20 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
             }
             for (FAP_edge &e1: adj[j]) {
                 if (e1.j != i) {
-                    if (N.find(make_pair(j, e1.j)) == N.end() && N.find(make_pair(e1.j, j)) == N.end()) {
-                        N.insert(make_pair(j, e1.j));
+                    auto Nuv = sorted_pair(j, e1.j);
+                    if (N.find(Nuv) == N.end()) {
+                        N.insert(Nuv);
                     }
                     for (FAP_edge &e2: adj[e1.j]) {
                         if (e2.j != j) {
-                            if (N.find(make_pair(e2.j, e1.j)) == N.end() &&
-                                N.find(make_pair(e1.j, e2.j)) == N.end()) {
-                                N.insert(make_pair(e1.j, e2.j));
+                            auto Nvz = sorted_pair(e2.j, e1.j);
+                            if (N.find(Nvz) == N.end()) {
+                                N.insert(Nvz);
                             }
                         }
                     }
                 }
             }
-
         }
     }
     return evaluate(ind);
