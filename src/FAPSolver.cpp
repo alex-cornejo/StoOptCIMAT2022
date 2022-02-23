@@ -50,9 +50,9 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
 }
 
 
-unordered_set<pair<int, int>, hash_pair> FAPSolver::make_double_neighborhood() {
+unordered_set<pair<int, int>, boost::hash<std::pair<int, int> >> FAPSolver::make_double_neighborhood() {
 
-    unordered_set<pair<int, int>, hash_pair> N(edges.size());
+    unordered_set<pair<int, int>, boost::hash<std::pair<int, int> >> N(edges.size());
     for (FAP_edge &e: edges) {
         N.insert(sorted_pair(e.i, e.j));
     }
@@ -112,15 +112,11 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
             for (FAP_edge &e1: adj[i]) {
                 if (e1.j != j) {
                     auto Nuv = sorted_pair(i, e1.j);
-                    if (N.find(Nuv) == N.end()) {
-                        N.insert(Nuv);
-                    }
+                    N.insert(Nuv);
                     for (FAP_edge &e2: adj[e1.j]) {
                         if (e2.j != i) {
                             auto Nvz = sorted_pair(e2.j, e1.j);
-                            if (N.find(Nvz) == N.end()) {
-                                N.insert(Nvz);
-                            }
+                            N.insert(Nvz);
                         }
                     }
                 }
@@ -128,15 +124,11 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
             for (FAP_edge &e1: adj[j]) {
                 if (e1.j != i) {
                     auto Nuv = sorted_pair(j, e1.j);
-                    if (N.find(Nuv) == N.end()) {
-                        N.insert(Nuv);
-                    }
+                    N.insert(Nuv);
                     for (FAP_edge &e2: adj[e1.j]) {
                         if (e2.j != j) {
                             auto Nvz = sorted_pair(e2.j, e1.j);
-                            if (N.find(Nvz) == N.end()) {
-                                N.insert(Nvz);
-                            }
+                            N.insert(Nvz);
                         }
                     }
                 }

@@ -22,6 +22,7 @@ long evaluate(vector<int> &ind, vector<FAP_edge> &edges) {
         }
     }
     cout << "Fitness: " << fitness << endl;
+    return fitness;
 }
 
 void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int m, int F, int pop_size,

@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <boost/functional/hash.hpp>
 
 struct FAP_edge {
     int i;
@@ -39,13 +40,6 @@ public:
     }
 };
 
-struct hash_pair {
-    size_t operator()(const std::pair<int,
-            int> &x) const {
-        return x.first ^ x.second;
-    }
-};
-
 class FAPSolver {
 private:
     std::vector<FAP_edge> edges;
@@ -69,7 +63,7 @@ public:
 
     std::vector<std::pair<int, int>> generate_full_neighborhood();
 
-    std::unordered_set<std::pair<int, int>, hash_pair> make_double_neighborhood();
+    std::unordered_set<std::pair<int, int>, boost::hash<std::pair<int, int> >> make_double_neighborhood();
 
     long run_swaplocalsearch(std::vector<int> &individual);
 
