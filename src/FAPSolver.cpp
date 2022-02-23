@@ -76,8 +76,9 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
         e = *adj_set[i].find(e);
         // get best assignment for i and j
         pair<int, int> Nij;
-        long Nij_p;
-        tie(Nij, Nij_p) = compute_best_Nij(ind, i, j, e.dij, e.pij);
+        long p_Nij;
+        long p_Ncurr;
+        tie(Nij, p_Nij, p_Ncurr) = compute_best_Nij(ind, i, j, e.dij, e.pij);
 
         long p_current = 0;
         for (FAP_edge &e1: adj[i]) {
@@ -101,7 +102,7 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 
         // there is a change (improvement)
 //        if (Nij.first != ind[i] || Nij.second != ind[j]) {
-        if (Nij_p < p_current) {
+        if (p_Nij < p_Ncurr) {
 
             // move to neighbor Nij
             ind[i] = Nij.first;
@@ -256,7 +257,7 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
  * @param pij the penalization to be applied if channels of i and j are close enough.
  * @return
  */
-pair<pair<int, int>, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
+tuple<pair<int, int>, long, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
 
     vector<pair<int, long>> trxi_p_ch(F);
     vector<pair<int, long>> trxj_p_ch(F);
@@ -267,6 +268,44 @@ pair<pair<int, int>, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, 
     }
 
     evaluate_channels(ind, i, j, trxi_p_ch, trxj_p_ch);
+
+    // compute cost of current solution
+    long p_Ncurr = trxi_p_ch[ind[i]].second + trxj_p_ch[ind[j]].second;
+    if (abs(ind[j] - ind[i]) <= dij) {
+        p_Ncurr += pij;
+    }
+
+    long p_current = 0;
+    for (FAP_edge &e1: adj[i]) {
+        if (j != e1.j) {
+            if (abs(ind[i] - ind[e1.j]) <= e1.dij) {
+                p_current += e1.pij;
+            }
+        } else {
+            int a = 1;
+        }
+    }
+    if (p_current != trxi_p_ch[ind[i]].second) {
+        int a = 1;
+    }
+    for (FAP_edge &e1: adj[j]) {
+        if (i != e1.j) {
+            if (abs(ind[j] - ind[e1.j]) <= e1.dij) {
+                p_current += e1.pij;
+            }
+        } else {
+            int a = 1;
+        }
+    }
+    if (i == 262 && j == 271) {
+        int a = 1;
+    }
+    if (abs(ind[j] - ind[i]) <= dij) {
+        p_current += pij;
+    }
+    if (p_current != p_Ncurr) {
+        int a = 1;
+    }
 
 
     sort(trxi_p_ch.begin(), trxi_p_ch.end(), [](auto &left, auto &right) {
@@ -302,28 +341,48 @@ pair<pair<int, int>, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, 
             if (!conflict) break;
         }
     }
-    return make_pair(Nij_best, p_Nij_best);
+    return make_tuple(Nij_best, p_Nij_best, p_Ncurr);
 }
 
 void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
                                   vector<pair<int, long>> &trxj_p_ch) {
 
+//    for (FAP_edge &e: adj[i]) {
+//        if (e.j != j) {
+//            for (int c = 0; c < F; ++c) {
+//                if (abs(c - ind[e.j]) <= e.dij) {
+//                    trxi_p_ch[c].second += e.pij;
+//                }
+//            }
+//        }
+//    }
+//    for (FAP_edge &e: adj[j]) {
+//        if (e.j != i) {
+//            for (int c = 0; c < F; ++c) {
+//                if (abs(c - ind[e.j]) <= e.dij) {
+//                    trxj_p_ch[c].second += e.pij;
+//                }
+//            }
+//        }
+//    }
+
     for (FAP_edge &e: adj[i]) {
         if (e.j != j) {
             int ck = ind[e.j];
             for (int c = ck - e.dij; c <= ck + e.dij; ++c) {
-                int mod = (c % F + F) % F;
-                trxi_p_ch[mod].second += e.pij;
+                if (c >= 0 && c < F) {
+                    trxi_p_ch[c].second += e.pij;
+                }
             }
         }
     }
     for (FAP_edge &e: adj[j]) {
         if (e.j != i) {
             int ck = ind[e.j];
-
             for (int c = ck - e.dij; c <= ck + e.dij; ++c) {
-                int mod = (c % F + F) % F;
-                trxj_p_ch[mod].second += e.pij;
+                if (c >= 0 && c < F) {
+                    trxj_p_ch[c].second += e.pij;
+                }
             }
         }
     }
