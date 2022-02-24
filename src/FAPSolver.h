@@ -86,7 +86,7 @@ public:
     void evaluate_channels(std::vector<int> &ind, int i, int j, std::vector<std::pair<int, long>> &trxi_p_ch,
                            std::vector<std::pair<int, long>> &trxj_p_ch);
 
-    std::tuple<std::pair<int, int>, long, long> compute_best_Nij(std::vector<int> &ind, int i, int j, int dij, long pij);
+    std::pair<std::pair<int, int>, bool> compute_best_Nij(std::vector<int> &ind, int i, int j, int dij, long pij);
 
     long doubletrx_localsearch(std::vector<int> &ind);
 };

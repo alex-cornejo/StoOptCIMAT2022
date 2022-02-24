@@ -70,39 +70,17 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
         tie(i, j) = *N.begin();
         N.erase(N.begin());
 
-
         FAP_edge e{};
         e.j = j;
         e = *adj_set[i].find(e);
+
         // get best assignment for i and j
         pair<int, int> Nij;
-        long p_Nij;
-        long p_Ncurr;
-        tie(Nij, p_Nij, p_Ncurr) = compute_best_Nij(ind, i, j, e.dij, e.pij);
-
-        long p_current = 0;
-        for (FAP_edge &e1: adj[i]) {
-            if (e1.j != j) {
-                if (abs(ind[i] - ind[e1.j]) <= e1.dij) {
-                    p_current += e1.pij;
-                }
-            }
-        }
-        for (FAP_edge &e1: adj[j]) {
-            if (e1.j != i) {
-                if (abs(ind[j] - ind[e1.j]) <= e1.dij) {
-                    p_current += e1.pij;
-                }
-            }
-        }
-        if (abs(ind[j] - ind[i]) <= e.dij) {
-            p_current += e.pij;
-        }
-
+        bool improved;
+        tie(Nij, improved) = compute_best_Nij(ind, i, j, e.dij, e.pij);
 
         // there is a change (improvement)
-//        if (Nij.first != ind[i] || Nij.second != ind[j]) {
-        if (p_Nij < p_Ncurr) {
+        if (improved) {
 
             // move to neighbor Nij
             ind[i] = Nij.first;
@@ -140,112 +118,6 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 
 }
 
-//long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
-//
-////    vector<int> N_trxi(n);
-////    iota(N_trxi.begin(), N_trxi.end(), 0); //become: [0..n-1]
-////    //random_shuffle(N_trxi.begin(), N_trxi.end());
-////    vector<bool> explored(n);
-////
-//////    int last2_j = -1, last1_j = -1;
-//////    queue<int> tabulist;
-////    deque<int> tabulist;
-////    int tabu_size = 4;
-//
-//
-//    auto N = make_double_neighborhood();
-//
-//    while (!N.empty()) {
-//        int i, j;
-//        tie(i, j) = *N.begin();
-//        N.erase(N.begin());
-//
-////        int i = N_trxi.back();
-////        explored[i] = true;
-////        N_trxi.pop_back();
-//
-//        bool improvement = false;
-////        int j;
-//        for (FAP_edge &e: adj[i]) {
-//            j = e.j;
-//            if (!explored[j]) {
-//                // get best assignment for i and j
-//                auto Nij = compute_best_Nij(ind, i, j, e.dij, e.pij);
-//
-//                // there is a change (improvement)
-//                if (Nij.first != ind[i] || Nij.second != ind[j]) {
-//                    if (j == 92) {
-//                        int a = 1;
-//                    }
-////                    if (find(tabulist.begin(), tabulist.end(), j) == tabulist.end())
-//                    if (true)
-////                    if (j != last2_j)
-//                    {
-//                        if (tabulist.size() == tabu_size) {
-//                            tabulist.pop_back();
-//                        }
-//                        tabulist.push_front(j);
-//
-////                        last2_j = last1_j == -1 ? -1 : last1_j;
-////                        last1_j = j;
-//
-//                        improvement = true;
-//
-//                        // move to neighbor Nij
-//                        ind[i] = Nij.first;
-//                        ind[j] = Nij.second;
-//
-//                        // re-add nodes to the neighborhood
-//                        // with distance at most 2
-//                        break;
-//                    }
-//
-//                } else {
-////                    cout << "No improvement!" << endl;
-//                }
-//            }
-//        }
-//        // re-add nodes to the neighborhood
-//        // with distance at most 2
-//        if (improvement) {
-//            explored[i] = false;
-//            N_trxi.push_back(i);
-//            for (FAP_edge &e1: adj[i]) {
-//                if (e1.j != j && explored[e1.j]) {
-//                    explored[e1.j] = false;
-//                    N_trxi.push_back(e1.j);
-//                    for (FAP_edge &e2: adj[e1.j]) {
-//                        if (e2.j != i && explored[e2.j]) {
-//                            explored[e2.j] = false;
-//                            N_trxi.push_back(e2.j);
-//                        }
-//                    }
-//                }
-//            }
-//            for (FAP_edge &e1: adj[j]) {
-//                if (e1.j != i && explored[e1.j]) {
-//                    explored[e1.j] = false;
-//                    N_trxi.push_back(e1.j);
-//                    for (FAP_edge &e2: adj[e1.j]) {
-//                        if (e2.j != j && explored[e2.j]) {
-//                            explored[e2.j] = false;
-//                            N_trxi.push_back(e2.j);
-//                        }
-//                    }
-//                }
-//            }
-//            int b = (int) N_trxi.size();
-//            if (b < 272) {
-//                int a = 1;
-//            }
-//            cout << N_trxi.size() << endl;
-//        } else {
-//            int a = 1;
-//        }
-//    }
-//    return evaluate(ind);
-//
-//}
 
 /**
  * Given two vertices i and j, the best assignment (Nij) for such vertices is computed.
@@ -257,7 +129,7 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
  * @param pij the penalization to be applied if channels of i and j are close enough.
  * @return
  */
-tuple<pair<int, int>, long, long> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
+pair<pair<int, int>, bool> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
 
     vector<pair<int, long>> trxi_p_ch(F);
     vector<pair<int, long>> trxj_p_ch(F);
@@ -269,44 +141,10 @@ tuple<pair<int, int>, long, long> FAPSolver::compute_best_Nij(vector<int> &ind, 
 
     evaluate_channels(ind, i, j, trxi_p_ch, trxj_p_ch);
 
-    // compute cost of current solution
-    long p_Ncurr = trxi_p_ch[ind[i]].second + trxj_p_ch[ind[j]].second;
-    if (abs(ind[j] - ind[i]) <= dij) {
-        p_Ncurr += pij;
-    }
-
-    long p_current = 0;
-    for (FAP_edge &e1: adj[i]) {
-        if (j != e1.j) {
-            if (abs(ind[i] - ind[e1.j]) <= e1.dij) {
-                p_current += e1.pij;
-            }
-        } else {
-            int a = 1;
-        }
-    }
-    if (p_current != trxi_p_ch[ind[i]].second) {
-        int a = 1;
-    }
-    for (FAP_edge &e1: adj[j]) {
-        if (i != e1.j) {
-            if (abs(ind[j] - ind[e1.j]) <= e1.dij) {
-                p_current += e1.pij;
-            }
-        } else {
-            int a = 1;
-        }
-    }
-    if (i == 262 && j == 271) {
-        int a = 1;
-    }
-    if (abs(ind[j] - ind[i]) <= dij) {
-        p_current += pij;
-    }
-    if (p_current != p_Ncurr) {
-        int a = 1;
-    }
-
+    // compute cost of current solution in O(1)
+    long p_Ncurr = trxi_p_ch[ind[i]].second
+                   + trxj_p_ch[ind[j]].second
+                   + (abs(ind[j] - ind[i]) <= dij ? pij : 0);
 
     sort(trxi_p_ch.begin(), trxi_p_ch.end(), [](auto &left, auto &right) {
         return left.second < right.second;
@@ -341,7 +179,7 @@ tuple<pair<int, int>, long, long> FAPSolver::compute_best_Nij(vector<int> &ind, 
             if (!conflict) break;
         }
     }
-    return make_tuple(Nij_best, p_Nij_best, p_Ncurr);
+    return make_pair(Nij_best, p_Nij_best < p_Ncurr);
 }
 
 void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
