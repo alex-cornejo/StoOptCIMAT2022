@@ -42,13 +42,14 @@ public:
 
 class FAPSolver {
 private:
-    std::vector<FAP_edge> edges;
+    std::vector<FAP_edge> E;
     int m;
     int n;
     int F;
     int pop_size;
     std::vector<std::vector<FAP_edge>> adj;
     std::vector<std::unordered_set<FAP_edge, FAP_edge_hash>> adj_set;
+    bool N_opt;
 
     long evaluate(std::vector<int> &ind);
 
@@ -69,7 +70,7 @@ public:
 
     long run_circularlocalsearch(std::vector<int> &individual);
 
-    FAPSolver(std::vector<FAP_edge> &edges, std::vector<std::vector<FAP_edge>> &adj, int m, int n, int f, int popSize);
+    FAPSolver(std::vector<FAP_edge> &edges, std::vector<std::vector<FAP_edge>> &adj, int m, int n, int f, int popSize, bool N_opt);
 
     virtual ~FAPSolver();
 

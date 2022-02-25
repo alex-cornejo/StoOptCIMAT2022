@@ -26,8 +26,8 @@ long evaluate(vector<int> &ind, vector<FAP_edge> &edges) {
 }
 
 void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int m, int F, int pop_size,
-             string &construction, string &localsearch, bool restart, string &output_file) {
-    FAPSolver solver(edges, adj, m, n, F, pop_size);
+             string &construction, string &localsearch, bool restart, string &output_file, bool N_opt) {
+    FAPSolver solver(edges, adj, m, n, F, pop_size, N_opt);
 
     // total time in milliseconds to run (if restart=true)
     long max_time = 3600000;
@@ -90,7 +90,7 @@ void execute(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int n, int 
 int main(int argc, char **argv) {
 
     // read parameters
-    if (argc != 8) {
+    if (argc != 9) {
         cerr << "Wrong parameters!" << endl;
     }
     string input_file = argv[1];
@@ -100,6 +100,7 @@ int main(int argc, char **argv) {
     string construction = argv[5];
     string localsearch = argv[6];
     bool restarting = strcmp(argv[7], "true") == 0;
+    bool N_opt = strcmp(argv[8], "true") == 0;
 
     if (construction != "random" && construction != "HEDGE") {
         cerr << "Wrong constructive method!" << endl;
@@ -122,7 +123,7 @@ int main(int argc, char **argv) {
     srand(seed);
     const int pop_size = 100000;
     execute(edges, adj, n, m, F, pop_size,
-            construction, localsearch, restarting, output_file);
+            construction, localsearch, restarting, output_file, N_opt);
 
     return 0;
 }

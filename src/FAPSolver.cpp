@@ -13,14 +13,13 @@ using namespace std;
 #include <chrono>
 #include <algorithm>
 #include <set>
-#include <numeric>
 #include <queue>
 
 using namespace std::chrono;
 
 FAPSolver::FAPSolver(vector<FAP_edge> &edges, vector<vector<FAP_edge>> &adj, int m, int n, int f,
-                     int popSize) :
-        edges(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize) {
+                     int popSize, bool N_opt) :
+        E(edges), adj(adj), m(m), n(n), F(f), pop_size(popSize), N_opt(N_opt) {
     adj_set.resize(n);
     for (int i = 0; i < n; ++i) {
         adj_set[i].reserve(adj[i].size());
@@ -50,10 +49,10 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
 }
 
 
-unordered_set<pair<int, int>, boost::hash<std::pair<int, int> >> FAPSolver::make_double_neighborhood() {
+unordered_set<pair<int, int>, boost::hash<pair<int, int> >> FAPSolver::make_double_neighborhood() {
 
-    unordered_set<pair<int, int>, boost::hash<std::pair<int, int> >> N(edges.size());
-    for (FAP_edge &e: edges) {
+    unordered_set<pair<int, int>, boost::hash<pair<int, int> >> N(E.size());
+    for (FAP_edge &e: E) {
         N.insert(sorted_pair(e.i, e.j));
     }
     return N;
@@ -87,30 +86,37 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
             ind[j] = Nij.second;
 
             // re-add nodes to the neighborhood
-            // with distance at most 2
-            for (FAP_edge &e1: adj[i]) {
-                if (e1.j != j) {
-                    auto Nuv = sorted_pair(i, e1.j);
-                    N.insert(Nuv);
-                    for (FAP_edge &e2: adj[e1.j]) {
-                        if (e2.j != i) {
-                            auto Nvz = sorted_pair(e2.j, e1.j);
-                            N.insert(Nvz);
+            // with distance at most 2 from i
+            if (N_opt) {
+                for (FAP_edge &e1: adj[i]) {
+                    if (e1.j != j) {
+                        auto Nuv = sorted_pair(e1.i, e1.j);
+                        N.insert(Nuv);
+                        for (FAP_edge &e2: adj[e1.j]) {
+                            if (e2.j != i) {
+                                auto Nvz = sorted_pair(e2.i, e2.j);
+                                N.insert(Nvz);
+                            }
                         }
                     }
                 }
-            }
-            for (FAP_edge &e1: adj[j]) {
-                if (e1.j != i) {
-                    auto Nuv = sorted_pair(j, e1.j);
-                    N.insert(Nuv);
-                    for (FAP_edge &e2: adj[e1.j]) {
-                        if (e2.j != j) {
-                            auto Nvz = sorted_pair(e2.j, e1.j);
-                            N.insert(Nvz);
+
+                // re-add nodes to the neighborhood
+                // with distance at most 2 from j
+                for (FAP_edge &e1: adj[j]) {
+                    if (e1.j != i) {
+                        auto Nuv = sorted_pair(e1.i, e1.j);
+                        N.insert(Nuv);
+                        for (FAP_edge &e2: adj[e1.j]) {
+                            if (e2.j != j) {
+                                auto Nvz = sorted_pair(e2.i, e2.j);
+                                N.insert(Nvz);
+                            }
                         }
                     }
                 }
+            } else {
+                N = make_double_neighborhood();
             }
         }
     }
@@ -308,7 +314,7 @@ long FAPSolver::circular_localsearch(vector<int> &individual) {
 /**
  * Given an individual and a possible move (neighbor (v, c) v is the node and c the channel),
  * the quality of the move (v, c) is incrementally evaluated by exploring only the possible
- * affected edges if move (v, c) is performed.
+ * affected E if move (v, c) is performed.
  *
  * @param individual
  * @param neighbor move (v, c) to be evaluated
@@ -365,7 +371,7 @@ vector<int> FAPSolver::create_randomindividual() {
  */
 long FAPSolver::evaluate(vector<int> &ind) {
     long fitness = 0;
-    for (FAP_edge &e: edges) {
+    for (FAP_edge &e: E) {
         if (abs(ind[e.i] - ind[e.j]) <= e.dij) {
             fitness += e.pij;
         }
