@@ -190,26 +190,7 @@ pair<pair<int, int>, bool> FAPSolver::compute_best_Nij(vector<int> &ind, int i, 
 
 void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
                                   vector<pair<int, long>> &trxj_p_ch) {
-
-//    for (FAP_edge &e: adj[i]) {
-//        if (e.j != j) {
-//            for (int c = 0; c < F; ++c) {
-//                if (abs(c - ind[e.j]) <= e.dij) {
-//                    trxi_p_ch[c].second += e.pij;
-//                }
-//            }
-//        }
-//    }
-//    for (FAP_edge &e: adj[j]) {
-//        if (e.j != i) {
-//            for (int c = 0; c < F; ++c) {
-//                if (abs(c - ind[e.j]) <= e.dij) {
-//                    trxj_p_ch[c].second += e.pij;
-//                }
-//            }
-//        }
-//    }
-
+    
     for (FAP_edge &e: adj[i]) {
         if (e.j != j) {
             int ck = ind[e.j];
