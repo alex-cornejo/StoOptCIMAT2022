@@ -23,7 +23,7 @@ def read_folder(folder, rows=2):
 
 
 F = [25]
-instance = "DSP-1000-32"
+instance = "DSP-1000-16"
 
 
 N_opt = "true"

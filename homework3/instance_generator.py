@@ -3,7 +3,7 @@ import random as rng
 rng.seed(0)
 
 n = 1000
-alpha = 32
+alpha = 64
 
 p_connect = 1 / n * alpha
 d_range = (0, 4)

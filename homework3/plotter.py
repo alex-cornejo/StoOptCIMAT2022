@@ -25,11 +25,11 @@ def read_folder(folder, rows=2):
 # F = [39, 49, 52]
 # instance = 'GSM2-184'
 
-F = [29, 39, 49]
-instance = 'GSM2-227'
+# F = [29, 39, 49]
+# instance = 'GSM2-227'
 
-# F = [34, 39, 49]
-# instance = 'GSM2-272'
+F = [34, 39, 49]
+instance = 'GSM2-272'
 
 
 constructive_methods = ['random']
@@ -47,7 +47,7 @@ for constructive in constructive_methods:
             times.append(read_folder(folder_path, 2)[1])
 
 fig7, ax7 = plt.subplots()
-ax7.set_title('Double change local search for {}'.format(instance))
+ax7.set_title('2TRXLS for {}'.format(instance))
 ax7.set_xticklabels(["|F|={}".format(F[0]), "|F|={}".format(F[1]), "|F|={}".format(F[2])])
 ax7.boxplot(data)
 

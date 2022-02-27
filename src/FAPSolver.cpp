@@ -48,7 +48,11 @@ vector<pair<int, int>> FAPSolver::generate_full_neighborhood() {
     return neighborhood;
 }
 
-
+/**
+ * Copy the pairs in E in a set N
+ *
+ * @return the pairs of adjacent nodes
+ */
 unordered_set<pair<int, int>, boost::hash<pair<int, int> >> FAPSolver::make_double_neighborhood() {
 
     unordered_set<pair<int, int>, boost::hash<pair<int, int> >> N(E.size());
@@ -58,9 +62,15 @@ unordered_set<pair<int, int>, boost::hash<pair<int, int> >> FAPSolver::make_doub
     return N;
 }
 
-
+/**
+ * Local Search algorithm that considers the neighborhood of changing the assigment of
+ * two adjacent vertices in the graph.
+ * @param ind
+ * @return
+ */
 long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 
+    // create partial neighborhood
     auto N = make_double_neighborhood();
 
     while (!N.empty()) {
@@ -76,7 +86,7 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
         // get best assignment for i and j
         pair<int, int> Nij;
         bool improved;
-        tie(Nij, improved) = compute_best_Nij(ind, i, j, e.dij, e.pij);
+        tie(Nij, improved) = compute_best_fifj(ind, i, j, e.dij, e.pij);
 
         // there is a change (improvement)
         if (improved) {
@@ -104,9 +114,12 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
                 // re-add nodes to the neighborhood
                 // with distance at most 2 from j
                 for (FAP_edge &e1: adj[j]) {
+
                     if (e1.j != i) {
+
                         auto Nuv = sorted_pair(e1.i, e1.j);
                         N.insert(Nuv);
+
                         for (FAP_edge &e2: adj[e1.j]) {
                             if (e2.j != j) {
                                 auto Nvz = sorted_pair(e2.i, e2.j);
@@ -116,26 +129,27 @@ long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
                     }
                 }
             } else {
+                // re-create neighborhood
                 N = make_double_neighborhood();
             }
         }
     }
-    return evaluate(ind);
 
+    return evaluate(ind);
 }
 
 
 /**
- * Given two vertices i and j, the best assignment (Nij) for such vertices is computed.
+ * Given two vertices i and j, the best assignment (fi, fj) for such vertices is computed.
  *
  * @param ind
  * @param i
  * @param j
- * @param dij
+ * @param dij constraint distance between vertices i and j
  * @param pij the penalization to be applied if channels of i and j are close enough.
- * @return
+ * @return best local assignment to vertices i and j and a flag true if such assigment improves the solution
  */
-pair<pair<int, int>, bool> FAPSolver::compute_best_Nij(vector<int> &ind, int i, int j, int dij, long pij) {
+pair<pair<int, int>, bool> FAPSolver::compute_best_fifj(vector<int> &ind, int i, int j, int dij, long pij) {
 
     vector<pair<int, long>> trxi_p_ch(F);
     vector<pair<int, long>> trxj_p_ch(F);
@@ -145,13 +159,15 @@ pair<pair<int, int>, bool> FAPSolver::compute_best_Nij(vector<int> &ind, int i, 
         trxj_p_ch[c] = make_pair(c, 0);
     }
 
+    // evaluate penalization of each possible channel for i and j
     evaluate_channels(ind, i, j, trxi_p_ch, trxj_p_ch);
 
-    // compute cost of current solution in O(1)
+    // compute penalization of current assignment in O(1)
     long p_Ncurr = trxi_p_ch[ind[i]].second
                    + trxj_p_ch[ind[j]].second
                    + (abs(ind[j] - ind[i]) <= dij ? pij : 0);
 
+    // sort penalizations for i and j
     sort(trxi_p_ch.begin(), trxi_p_ch.end(), [](auto &left, auto &right) {
         return left.second < right.second;
     });
@@ -188,9 +204,20 @@ pair<pair<int, int>, bool> FAPSolver::compute_best_Nij(vector<int> &ind, int i, 
     return make_pair(Nij_best, p_Nij_best < p_Ncurr);
 }
 
+/**
+ * Given a pair (i, j) and a candidate solution s, the penalization of assigning the frequency channels to
+ * i and j in s is evaluated.
+ *
+ * @param ind
+ * @param i
+ * @param j
+ * @param trxi_p_ch
+ * @param trxj_p_ch
+ */
 void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<int, long>> &trxi_p_ch,
                                   vector<pair<int, long>> &trxj_p_ch) {
-    
+
+    // evaluate channels assigned to i
     for (FAP_edge &e: adj[i]) {
         if (e.j != j) {
             int ck = ind[e.j];
@@ -201,6 +228,8 @@ void FAPSolver::evaluate_channels(vector<int> &ind, int i, int j, vector<pair<in
             }
         }
     }
+
+    // evaluate channels assigned to j
     for (FAP_edge &e: adj[j]) {
         if (e.j != i) {
             int ck = ind[e.j];
