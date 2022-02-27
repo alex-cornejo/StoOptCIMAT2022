@@ -71,6 +71,7 @@ unordered_set<pair<int, int>, boost::hash<pair<int, int> >> FAPSolver::make_doub
 long FAPSolver::doubletrx_localsearch(vector<int> &ind) {
 
     // create partial neighborhood
+    // set to track unexplored neighbors
     auto N = make_double_neighborhood();
 
     while (!N.empty()) {
